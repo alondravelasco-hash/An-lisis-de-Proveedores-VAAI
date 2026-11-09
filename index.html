@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Comparativo de Proveedores - VAAI</title>
+    
+    <!-- Fuentes (Inter para el look Apple) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js para las gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- React y ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        apple: {
+                            dark: '#0a0908', // Café muy oscuro / Negro cálido
+                            mocha: '#4a3b32', // Café medio
+                            beige: '#d4c3b3', // Beige elegante
+                            gold: '#c5a059', // Dorado suave
+                            copper: '#9b5f3a', // Cobre / Bronce
+                            titanium: '#a9a9a9' // Titanio / Gris cálido
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'fade-in': 'fadeIn 1s ease-out forwards',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(40px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0a0908; /* Fondo café muy oscuro */
+            color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(circle at 50% 0%, #1a1512 0%, transparent 70%),
+                url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0V0zm20 20h20v20H20V20zM0 20h20v20H0V20z' fill='%23d4c3b3' fill-opacity='0.02' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+
+        /* Orbes animados de fondo (Tonos Cálidos/Cafés/Beiges) */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(90px);
+            z-index: -1;
+            opacity: 0.4;
+            animation: float 15s infinite ease-in-out alternate;
+        }
+        .orb-1 {
+            width: 45vw; height: 45vw;
+            background: radial-gradient(circle, rgba(197,160,89,0.12) 0%, transparent 70%); /* Oro */
+            top: -10%; left: -10%;
+        }
+        .orb-2 {
+            width: 55vw; height: 55vw;
+            background: radial-gradient(circle, rgba(155,95,58,0.12) 0%, transparent 70%); /* Cobre */
+            bottom: -20%; right: -10%;
+            animation-delay: -5s;
+        }
+        .orb-3 {
+            width: 35vw; height: 35vw;
+            background: radial-gradient(circle, rgba(212,195,179,0.1) 0%, transparent 70%); /* Beige */
+            top: 30%; left: 35%;
+            animation-delay: -10s;
+        }
+
+        /* Estilos Glassmorphism Premium Cálido */
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(212, 195, 179, 0.05) 0%, rgba(212, 195, 179, 0.01) 100%);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(212, 195, 179, 0.08);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(212,195,179,0.1);
+        }
+        
+        .glass-card {
+            background: linear-gradient(135deg, rgba(212,195,179,0.04) 0%, rgba(212,195,179,0.005) 100%);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(212, 195, 179, 0.06);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(212,195,179,0.04), transparent);
+            transform: skewX(-20deg);
+            transition: all 0.7s ease;
+            z-index: 1;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(212, 195, 179, 0.18);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 40px rgba(197,160,89,0.1);
+        }
+
+        .glass-card:hover::before {
+            left: 200%;
+        }
+
+        /* Patrón tecnológico en tarjetas */
+        .tech-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 0l.83.83v58.34l-.83.83H5.373l-.83-.83V.83l.83-.83h49.254zM53.5 2H6.5v56h47V2zm-33.15 6.85l1.414 1.415L15.414 16.62l1.414 1.414 5.657-5.657 1.414 1.414-7.07 7.071-2.829-2.828 7.071-7.071zm15.557 0l7.071 7.071-2.829 2.828-7.07-7.071 1.414-1.414 5.657 5.657 1.414-1.414-6.35-6.35 1.414-1.414zM24.5 48.5h11v2h-11v-2zm-12-16h2v11h-2v-11zm35 0h2v11h-2v-11z' fill='%23d4c3b3' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+
+        /* Gradientes de texto */
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(135deg, #ffffff 0%, #d4c3b3 100%);
+        }
+        .text-gradient-gold {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(135deg, #fceabb 0%, #c5a059 100%);
+        }
+        .text-gradient-copper {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(135deg, #d4c3b3 0%, #9b5f3a 100%);
+        }
+        .text-gradient-titanium {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(135deg, #ffffff 0%, #a9a9a9 100%);
+        }
+
+        /* Scrollbar oculta para limpieza visual */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(212, 195, 179, 0.2);
+            border-radius: 4px;
+        }
+        
+        /* Animaciones para diapositivas */
+        .slide-enter {
+            opacity: 0;
+            transform: scale(0.97) translateY(15px);
+            transition: all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .slide-enter-active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        /* Bordes premium y glows cálidos */
+        .premium-border {
+            position: relative;
+            background: rgba(18, 15, 14, 0.7);
+            border-radius: 2rem;
+            z-index: 1;
+            backdrop-filter: blur(20px);
+        }
+        .premium-border::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: 2.1rem;
+            background: linear-gradient(135deg, rgba(212,195,179,0.15) 0%, rgba(212,195,179,0.02) 50%, rgba(212,195,179,0.05) 100%);
+            z-index: -1;
+            transition: all 0.5s ease;
+        }
+        .premium-border:hover::before {
+            background: linear-gradient(135deg, rgba(197,160,89,0.4) 0%, rgba(212,195,179,0.05) 50%, rgba(155,95,58,0.3) 100%);
+        }
+        
+        .glowing-bg {
+            position: absolute;
+            width: 160%;
+            height: 160%;
+            top: -30%;
+            left: -30%;
+            background: radial-gradient(circle, var(--glow-color) 0%, transparent 60%);
+            opacity: 0;
+            z-index: -2;
+            transition: opacity 0.7s ease;
+        }
+        .group:hover .glowing-bg {
+            opacity: 0.15;
+        }
+
+        .table-row-hover {
+            transition: all 0.3s ease;
+        }
+        .table-row-hover:hover {
+            background: linear-gradient(90deg, rgba(212,195,179,0.0) 0%, rgba(212,195,179,0.04) 50%, rgba(212,195,179,0.0) 100%);
+            transform: scale(1.01);
+            border-color: rgba(212, 195, 179, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div className="bg-orb orb-1"></div>
+    <div className="bg-orb orb-2"></div>
+    <div className="bg-orb orb-3"></div>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- DATOS DE LAS COTIZACIONES ---
+        const data = {
+            gama: {
+                name: "GAMA SISTEMAS",
+                subtotal: 203354.99,
+                iva: 32536.80,
+                total: 235891.79,
+                delivery: "3 A 7 DÍAS",
+                colorCode: 'rgba(155, 95, 58, 1)', // Cobre
+                items: [
+                    { id: 1, name: "MAC MINI 15C CPU/24GB/512GB", qty: 1, unit: 34970.00, total: 34970.00 },
+                    { id: 2, name: "Monitor Gaming LG 27GS60F-B", qty: 3, unit: 2955.00, total: 8865.00 },
+                    { id: 3, name: "Dell Pro Precision 5 16 Ultra 9", qty: 1, unit: 92243.20, total: 92243.20 },
+                    { id: 4, name: "Kit Poly Studio X32 + Accesorios", qty: 1, unit: 56776.79, total: 56776.79 },
+                    { id: 5, name: "JBL Live 460nc", qty: 6, unit: 1750.00, total: 10500.00 },
+                    { id: 6, name: "Osmo Pocket (No Cotizado)", qty: 0, unit: 0.00, total: 0.00 },
+                ]
+            },
+            mg: {
+                name: "MG MICROS",
+                subtotal: 137410.00,
+                iva: 21985.60,
+                total: 159395.60,
+                delivery: "INMEDIATA",
+                colorCode: 'rgba(197, 160, 89, 1)', // Dorado
+                items: [
+                    { id: 1, name: "MAC MINI/18C CPU/48GB/1TB", qty: 1, unit: 57784.00, total: 57784.00 },
+                    { id: 2, name: "Monitor Gaming LG 27GS60F-B", qty: 3, unit: 2956.00, total: 8868.00 },
+                    { id: 3, name: "Dell Alienware Aurora 16 i7", qty: 1, unit: 29975.00, total: 29975.00 },
+                    { id: 4, name: "Poly Studio USB Video Bar", qty: 1, unit: 8783.00, total: 8783.00 },
+                    { id: 5, name: "JBL Live 680NC", qty: 6, unit: 3000.00, total: 18000.00 },
+                    { id: 6, name: "Osmo Pocket 4 Creator Combo", qty: 1, unit: 14000.00, total: 14000.00 },
+                ]
+            },
+            yovsol: {
+                name: "YOVSOL",
+                subtotal: 234737.00,
+                iva: 37557.92,
+                total: 272294.92,
+                delivery: "HASTA 25 DÍAS",
+                colorCode: 'rgba(169, 169, 169, 1)', // Titanio
+                items: [
+                    { id: 1, name: "Mac mini con chip M5 Pro 18C", qty: 1, unit: 59249.00, total: 59249.00 },
+                    { id: 2, name: "Monitor Gaming LG 27GS60F-B", qty: 3, unit: 2989.00, total: 8967.00 },
+                    { id: 3, name: "Alienware Ac16251 Ultra 9", qty: 1, unit: 63829.00, total: 63829.00 },
+                    { id: 4, name: "Hp Poly Studio X52 All-In-One", qty: 1, unit: 68849.00, total: 68849.00 },
+                    { id: 5, name: "Audífonos Over-Ear LIVE 780NC", qty: 6, unit: 3159.00, total: 18954.00 },
+                    { id: 6, name: "DJI Osmo Pocket 4 Creator", qty: 1, unit: 14889.00, total: 14889.00 },
+                ]
+            }
+        };
+
+        const formatCurrency = (val) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
+
+        // --- ICONOS TECH SVG ---
+        const MicrochipIcon = () => (
+            <svg className="absolute opacity-[0.03] w-64 h-64 -bottom-10 -right-10 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+            </svg>
+        );
+
+        const NetworkIcon = () => (
+            <svg className="absolute opacity-[0.03] w-72 h-72 -bottom-12 -left-10 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+        );
+
+        const DatabaseIcon = () => (
+            <svg className="absolute opacity-[0.03] w-64 h-64 -top-10 -right-10 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+            </svg>
+        );
+
+        // --- COMPONENTES DE LAS DIAPOSITIVAS ---
+
+        const Slide1 = () => (
+            <div className="flex flex-col items-center justify-center h-full text-center slide-enter slide-enter-active relative">
+                {/* SVG Decorativo Central */}
+                <div className="absolute inset-0 flex justify-center items-center opacity-5 pointer-events-none z-0">
+                    <svg viewBox="0 0 100 100" className="w-[800px] h-[800px] animate-pulse-slow" fill="none" stroke="currentColor" strokeWidth="0.2">
+                        <circle cx="50" cy="50" r="40" />
+                        <circle cx="50" cy="50" r="30" strokeDasharray="2 2" />
+                        <path d="M50 10 L50 90 M10 50 L90 50" />
+                    </svg>
+                </div>
+                
+                <div className="relative z-10 flex flex-col items-center">
+                    <div className="mb-6 px-5 py-2 rounded-full border border-apple-gold/20 bg-apple-gold/5 backdrop-blur-md text-apple-beige font-semibold tracking-[0.3em] text-[11px] uppercase animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+                        Universidad de Guadalajara - VAAI
+                    </div>
+                    <h1 className="text-7xl md:text-9xl font-black tracking-tighter mb-4 animate-fade-in-up leading-tight" style={{animationDelay: '0.3s'}}>
+                        <span className="text-gradient">Análisis de</span><br/>
+                        <span className="text-gradient-gold">Proveedores.</span>
+                    </h1>
+                    <p className="text-xl md:text-2xl text-stone-400 max-w-3xl animate-fade-in-up font-light leading-relaxed mt-4" style={{animationDelay: '0.5s'}}>
+                        Una evaluación técnica y financiera de las 3 propuestas: <span className="text-apple-copper font-medium">GAMA SISTEMAS</span>, <span className="text-apple-gold font-medium">MG MICROS</span> y <span className="text-apple-titanium font-medium">YOVSOL</span> para la mejor decisión tecnológica.
+                    </p>
+                </div>
+            </div>
+        );
+
+        const Slide2 = () => {
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+
+            useEffect(() => {
+                if (chartInstance.current) {
+                    chartInstance.current.destroy();
+                }
+                const ctx = chartRef.current.getContext('2d');
+                chartInstance.current = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['GAMA SISTEMAS', 'MG MICROS', 'YOVSOL'],
+                        datasets: [{
+                            label: 'Costo Total (MXN con IVA)',
+                            data: [data.gama.total, data.mg.total, data.yovsol.total],
+                            backgroundColor: [
+                                'rgba(155, 95, 58, 0.7)',   // Copper (GAMA)
+                                'rgba(197, 160, 89, 0.85)',  // Gold (MG)
+                                'rgba(169, 169, 169, 0.3)'   // Titanium (YOVSOL)
+                            ],
+                            borderColor: [
+                                'rgba(155, 95, 58, 1)',
+                                'rgba(197, 160, 89, 1)',
+                                'rgba(169, 169, 169, 0.6)'
+                            ],
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            barThickness: 50,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(10,9,8,0.9)',
+                                titleColor: '#d4c3b3',
+                                bodyColor: '#f5f5f5',
+                                borderColor: 'rgba(212, 195, 179, 0.2)',
+                                borderWidth: 1,
+                                titleFont: { size: 16, family: 'Inter', weight: 'normal' },
+                                bodyFont: { size: 15, family: 'Inter', weight: 'bold' },
+                                padding: 12,
+                                callbacks: {
+                                    label: (context) => formatCurrency(context.raw)
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(212,195,179,0.05)' },
+                                ticks: {
+                                    color: '#a1a1a6',
+                                    font: { family: 'Inter', weight: '300' },
+                                    callback: (val) => '$' + (val/1000) + 'k'
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#d4c3b3', font: { family: 'Inter', size: 13, weight: '500' } }
+                            }
+                        },
+                        animation: {
+                            duration: 2000,
+                            easing: 'easeOutQuart'
+                        }
+                    }
+                });
+                return () => chartInstance.current.destroy();
+            }, []);
+
+            return (
+                <div className="flex flex-col h-full slide-enter slide-enter-active px-4 md:px-12 pt-8">
+                    <h2 className="text-5xl md:text-6xl font-bold mb-3 tracking-tight text-gradient">El Panorama General.</h2>
+                    <p className="text-xl text-stone-400 mb-8 font-light">Comparativa directa de las propuestas económicas.</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div className="glass-card tech-pattern rounded-[2rem] p-8 flex flex-col justify-center animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+                            <div className="w-10 h-10 rounded-full bg-apple-copper/20 flex items-center justify-center mb-4 border border-apple-copper/30">
+                                <svg className="w-5 h-5 text-apple-copper" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            </div>
+                            <h3 className="text-stone-400 text-[11px] font-bold uppercase tracking-[0.2em] mb-2">GAMA SISTEMAS</h3>
+                            <div className="text-4xl font-bold text-stone-200 mb-2 tracking-tight">{formatCurrency(data.gama.total)}</div>
+                            <div className="text-sm text-apple-copper flex items-center font-medium">
+                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Entrega {data.gama.delivery}
+                            </div>
+                        </div>
+                        <div className="glass-card tech-pattern rounded-[2rem] p-8 flex flex-col justify-center animate-fade-in-up ring-1 ring-apple-gold/30" style={{animationDelay: '0.3s'}}>
+                            <div className="w-10 h-10 rounded-full bg-apple-gold/20 flex items-center justify-center mb-4 border border-apple-gold/40 shadow-[0_0_20px_rgba(197,160,89,0.2)]">
+                                <svg className="w-5 h-5 text-apple-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <h3 className="text-stone-400 text-[11px] font-bold uppercase tracking-[0.2em] mb-2">MG MICROS</h3>
+                            <div className="text-4xl font-bold text-gradient-gold mb-2 tracking-tight">{formatCurrency(data.mg.total)}</div>
+                            <div className="text-sm text-green-500/80 flex items-center font-medium">
+                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Entrega {data.mg.delivery}
+                            </div>
+                        </div>
+                        <div className="glass-card tech-pattern rounded-[2rem] p-8 flex flex-col justify-center animate-fade-in-up" style={{animationDelay: '0.4s'}}>
+                            <div className="w-10 h-10 rounded-full bg-apple-titanium/10 flex items-center justify-center mb-4 border border-apple-titanium/30">
+                                <svg className="w-5 h-5 text-apple-titanium" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                            </div>
+                            <h3 className="text-stone-400 text-[11px] font-bold uppercase tracking-[0.2em] mb-2">YOVSOL</h3>
+                            <div className="text-4xl font-bold text-stone-200 mb-2 tracking-tight">{formatCurrency(data.yovsol.total)}</div>
+                            <div className="text-sm text-stone-500 flex items-center font-medium">
+                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Entrega {data.yovsol.delivery}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="flex-grow glass-panel rounded-[2rem] p-6 relative animate-fade-in-up" style={{animationDelay: '0.6s'}}>
+                        <canvas ref={chartRef}></canvas>
+                    </div>
+                </div>
+            );
+        };
+
+        const Slide3 = () => {
+            return (
+                <div className="flex flex-col items-center justify-center h-full slide-enter slide-enter-active px-4 md:px-12 pt-4 overflow-hidden">
+                    <div className="w-full max-w-7xl">
+                        <h2 className="text-5xl md:text-6xl font-bold mb-2 tracking-tight text-gradient">Partida por Partida.</h2>
+                        <p className="text-xl text-stone-400 mb-6 font-light">Desglose analítico de los precios unitarios.</p>
+                        
+                        <div className="premium-border overflow-hidden flex flex-col shadow-2xl backdrop-blur-3xl">
+                            <div className="overflow-y-auto w-full p-4">
+                                <div className="min-w-max w-full">
+                                    {/* Header ultra limpio */}
+                                    <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-apple-beige/10 text-xs uppercase tracking-[0.2em] text-stone-500 font-bold bg-[#0a0908]/90 backdrop-blur-md z-10 rounded-t-xl">
+                                        <div className="col-span-1 text-center">Part.</div>
+                                        <div className="col-span-3">Gama Sistemas</div>
+                                        <div className="col-span-3 text-apple-gold">MG Micros</div>
+                                        <div className="col-span-3">Yovsol</div>
+                                        <div className="col-span-2 text-right">Comparativa</div>
+                                    </div>
+                                    
+                                    {/* Rows con diseño de tarjeta plana */}
+                                    <div className="flex flex-col gap-3 p-2">
+                                        {[0, 1, 2, 3, 4, 5].map((i) => {
+                                            const gamaItem = data.gama.items[i];
+                                            const mgItem = data.mg.items[i];
+                                            const yovItem = data.yovsol.items[i];
+                                            
+                                            const maxPrice = Math.max(gamaItem.unit, mgItem.unit, yovItem.unit);
+                                            const minPrice = Math.min(...[gamaItem.unit, mgItem.unit, yovItem.unit].filter(v => v > 0));
+                                            const diff = maxPrice - (minPrice === Infinity ? 0 : minPrice);
+                                            
+                                            return (
+                                                <div key={i} className="grid grid-cols-12 gap-4 px-6 py-4 rounded-xl border border-apple-beige/10 table-row-hover bg-apple-beige/[0.03] items-center transition-colors hover:bg-apple-beige/[0.06]">
+                                                    <div className="col-span-1 text-center font-black text-stone-600 text-2xl">{i + 1}</div>
+                                                    
+                                                    <div className="col-span-3 pr-4">
+                                                        <div className="text-sm text-stone-300 leading-snug mb-1 font-medium truncate" title={gamaItem.name}>{gamaItem.name}</div>
+                                                        <div className="font-bold text-stone-200 text-xl tracking-tight">{gamaItem.unit > 0 ? formatCurrency(gamaItem.unit) : <span className="text-red-400 text-[10px] font-bold border border-red-900/50 bg-red-950/40 px-2 py-1 rounded tracking-wider">NO COTIZADO</span>}</div>
+                                                    </div>
+                                                    
+                                                    <div className="col-span-3 pr-4 relative">
+                                                        <div className="absolute inset-0 bg-apple-gold/10 rounded-xl -m-3 blur-md opacity-50"></div>
+                                                        <div className="relative">
+                                                            <div className="text-sm text-apple-gold/90 leading-snug mb-1 font-medium truncate" title={mgItem.name}>{mgItem.name}</div>
+                                                            <div className="font-bold text-apple-beige text-xl tracking-tight">{formatCurrency(mgItem.unit)}</div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="col-span-3 pr-4">
+                                                        <div className="text-sm text-stone-300 leading-snug mb-1 font-medium truncate" title={yovItem.name}>{yovItem.name}</div>
+                                                        <div className="font-bold text-stone-200 text-xl tracking-tight">{formatCurrency(yovItem.unit)}</div>
+                                                    </div>
+                                                    
+                                                    <div className="col-span-2 text-right flex flex-col justify-center items-end">
+                                                        <div className="font-extrabold text-stone-50 text-2xl tracking-tight">{formatCurrency(diff)}</div>
+                                                        <div className="text-xs text-stone-500 mt-1 uppercase tracking-widest font-semibold">Dif. Unitaria</div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const SlideVideo = () => (
+            <div className="flex flex-col h-full slide-enter slide-enter-active px-4 md:px-12 pt-8 overflow-hidden">
+                <div className="inline-flex items-center px-3 py-1.5 mb-4 bg-apple-beige/10 border border-apple-beige/20 text-apple-beige text-[10px] font-bold rounded-full uppercase tracking-[0.2em] w-max animate-fade-in-up">
+                    <span className="w-2 h-2 rounded-full bg-apple-gold mr-2 animate-pulse"></span>
+                    Anexo de Cotización Adicional
+                </div>
+                <h2 className="text-4xl md:text-5xl font-bold mb-2 tracking-tight text-white animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+                    El Espectro de <span className="text-gradient-gold">Videoconferencia.</span>
+                </h2>
+                <p className="text-lg text-stone-400 mb-10 font-light animate-fade-in-up max-w-4xl" style={{animationDelay: '0.2s'}}>
+                    Comparativa técnica exclusivamente para la Partida 4 (Barras de Video), integrando la <strong>nueva alternativa de nivel medio</strong> enviada por YOVSOL.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5 pb-8 flex-grow items-stretch">
+                    {/* Nivel 1 */}
+                    <div className="premium-border p-6 flex flex-col justify-between relative group animate-fade-in-up hover:-translate-y-2 transition-transform duration-500 overflow-hidden" style={{animationDelay: '0.3s'}}>
+                        <MicrochipIcon />
+                        <div className="relative z-10">
+                            <div className="text-[10px] text-stone-500 uppercase tracking-widest font-bold mb-4">Nivel Básico</div>
+                            <h3 className="text-xl font-bold text-stone-200 mb-1">Poly Studio USB</h3>
+                            <p className="text-sm text-apple-gold font-medium mb-6">MG MICROS</p>
+                        </div>
+                        <div className="relative z-10 pt-4 border-t border-apple-beige/10">
+                            <div className="text-2xl md:text-3xl font-black text-stone-100 mb-2">$8,783.00</div>
+                            <p className="text-xs text-stone-400 font-light leading-relaxed">Opción de entrada. Funcionalidad solicitada sin exceder costos.</p>
+                        </div>
+                    </div>
+
+                    {/* Nivel 2 - LA NUEVA */}
+                    <div className="premium-border p-6 flex flex-col justify-between relative group animate-fade-in-up transform md:-translate-y-4 shadow-[0_0_30px_rgba(212,195,179,0.1)] border border-apple-beige/30 overflow-hidden" style={{animationDelay: '0.4s'}}>
+                        <NetworkIcon />
+                        <div className="absolute inset-0 bg-gradient-to-b from-apple-beige/10 to-transparent rounded-2xl opacity-40 z-0"></div>
+                        <div className="absolute -top-3 -right-3 z-20">
+                            <span className="relative flex h-6 w-6">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-apple-beige opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-6 w-6 bg-apple-beige items-center justify-center text-[10px] font-bold text-black">!</span>
+                            </span>
+                        </div>
+                        <div className="relative z-10">
+                            <div className="text-[10px] text-apple-beige uppercase tracking-widest font-bold mb-4 flex items-center">
+                                Nivel Medio <span className="ml-2 px-1.5 py-0.5 bg-apple-beige/20 text-apple-beige rounded text-[8px] border border-apple-beige/30">NUEVA</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-1">Poly Studio V12</h3>
+                            <p className="text-sm text-stone-300 font-medium mb-6">YOVSOL <span className="text-stone-500">(Alternativa)</span></p>
+                        </div>
+                        <div className="relative z-10 pt-4 border-t border-apple-beige/30">
+                            <div className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-apple-beige to-white mb-2">$17,659.00</div>
+                            <p className="text-xs text-stone-300/80 font-light mb-3 leading-relaxed">Cotización extra enviada para ofrecer mejor calidad y puenteando la brecha de precios.</p>
+                            <div className="text-[10px] font-bold text-stone-900 bg-apple-beige inline-block px-2 py-1 rounded">¡Última Pieza!</div>
+                        </div>
+                    </div>
+
+                    {/* Nivel 3 */}
+                    <div className="premium-border p-6 flex flex-col justify-between relative group animate-fade-in-up hover:-translate-y-2 transition-transform duration-500 overflow-hidden" style={{animationDelay: '0.5s'}}>
+                        <DatabaseIcon />
+                        <div className="relative z-10">
+                            <div className="text-[10px] text-stone-500 uppercase tracking-widest font-bold mb-4">Nivel Avanzado</div>
+                            <h3 className="text-xl font-bold text-stone-200 mb-1">Kit Poly Studio X32</h3>
+                            <p className="text-sm text-apple-copper font-medium mb-6">GAMA SISTEMAS</p>
+                        </div>
+                        <div className="relative z-10 pt-4 border-t border-apple-beige/10">
+                            <div className="text-2xl md:text-3xl font-black text-stone-100 mb-2">$56,776.79</div>
+                            <p className="text-xs text-stone-400 font-light leading-relaxed">Agrupa múltiples micrófonos y accesorios para equipar una sala completa.</p>
+                        </div>
+                    </div>
+
+                    {/* Nivel 4 */}
+                    <div className="premium-border p-6 flex flex-col justify-between relative group animate-fade-in-up hover:-translate-y-2 transition-transform duration-500 overflow-hidden" style={{animationDelay: '0.6s'}}>
+                        <MicrochipIcon />
+                        <div className="relative z-10">
+                            <div className="text-[10px] text-stone-500 uppercase tracking-widest font-bold mb-4">Ultra Premium</div>
+                            <h3 className="text-xl font-bold text-stone-200 mb-1">HP Poly Studio X52</h3>
+                            <p className="text-sm text-apple-titanium font-medium mb-6">YOVSOL <span className="text-stone-500">(Principal)</span></p>
+                        </div>
+                        <div className="relative z-10 pt-4 border-t border-apple-beige/10">
+                            <div className="text-2xl md:text-3xl font-black text-stone-100 mb-2">$68,849.00</div>
+                            <p className="text-xs text-stone-400 font-light leading-relaxed">Barra "All-In-One" de máxima especificación. El modelo tope de gama absoluto.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Slide4 = () => (
+            <div className="flex flex-col h-full slide-enter slide-enter-active px-4 md:px-12 pt-8">
+                <h2 className="text-5xl md:text-6xl font-bold mb-2 tracking-tight text-gradient">El Porqué de las Diferencias.</h2>
+                <p className="text-xl text-stone-400 mb-10 font-light">Tres perfiles de hardware muy distintos respondiendo al mismo requerimiento.</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10 h-full pb-8">
+                    {/* Perfil MG */}
+                    <div className="group premium-border p-8 flex flex-col relative overflow-hidden animate-fade-in-up tech-pattern" style={{animationDelay: '0.2s'}}>
+                        <div className="glowing-bg" style={{'--glow-color': 'rgba(197, 160, 89, 0.7)'}}></div>
+                        <NetworkIcon />
+                        
+                        <div className="relative z-10 flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-3xl font-extrabold text-stone-100 tracking-tight mb-2">Equilibrado.</h3>
+                                <div className="inline-flex items-center px-3 py-1 bg-apple-gold/10 border border-apple-gold/30 text-apple-gold text-xs font-bold rounded-full uppercase tracking-wider">
+                                    MG Micros
+                                </div>
+                            </div>
+                            <svg className="w-10 h-10 text-apple-gold/40 transform group-hover:scale-110 group-hover:text-apple-gold transition-all duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        
+                        <p className="relative z-10 text-stone-300 text-sm mb-8 font-medium leading-relaxed">
+                            La propuesta más económica <span className="text-apple-gold font-bold">($159k)</span>. Cumple con el volumen solicitado optando por modelos eficientes.
+                        </p>
+                        
+                        <div className="w-full h-px bg-gradient-to-r from-transparent via-apple-beige/10 to-transparent mb-6"></div>
+                        
+                        <ul className="relative z-10 text-sm text-stone-400 space-y-5 font-light flex-grow">
+                            <li className="flex items-start"><span className="text-apple-gold mr-3 mt-0.5">✦</span> <span className="leading-relaxed"><b className="text-stone-200">Laptop:</b> Alienware Core i7, 16GB RAM, RTX 5050.</span></li>
+                            <li className="flex items-start"><span className="text-apple-gold mr-3 mt-0.5">✦</span> <span className="leading-relaxed"><b className="text-stone-200">Cámara:</b> Poly Studio USB Básica.</span></li>
+                            <li className="flex items-start"><span className="text-apple-gold mr-3 mt-0.5">✦</span> <span className="leading-relaxed"><b className="text-stone-200">Mac Mini:</b> Más potente (18C / 48GB).</span></li>
+                        </ul>
+                    </div>
+
+                    {/* Perfil GAMA */}
+                    <div className="group premium-border p-8 flex flex-col relative overflow-hidden animate-fade-in-up tech-pattern" style={{animationDelay: '0.4s'}}>
+                        <div className="glowing-bg" style={{'--glow-color': 'rgba(155, 95, 58, 0.7)'}}></div>
+                        <DatabaseIcon />
+                        
+                        <div className="relative z-10 flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-3xl font-extrabold text-stone-100 tracking-tight mb-2">Workstation.</h3>
+                                <div className="inline-flex items-center px-3 py-1 bg-apple-copper/10 border border-apple-copper/30 text-apple-copper text-xs font-bold rounded-full uppercase tracking-wider">
+                                    Gama Sistemas
+                                </div>
+                            </div>
+                            <svg className="w-10 h-10 text-apple-copper/40 transform group-hover:scale-110 group-hover:text-apple-copper transition-all duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        </div>
+                        
+                        <p className="relative z-10 text-stone-300 text-sm mb-8 font-medium leading-relaxed">
+                            Propuesta media <span className="text-apple-copper font-bold">($235k)</span>. Invierte fuerte en Laptop y Sala de juntas, pero recorta en la Mac.
+                        </p>
+                        
+                        <div className="w-full h-px bg-gradient-to-r from-transparent via-apple-beige/10 to-transparent mb-6"></div>
+                        
+                        <ul className="relative z-10 text-sm text-stone-400 space-y-5 font-light flex-grow">
+                            <li className="flex items-start"><span className="text-apple-copper mr-3 mt-0.5">✦</span> <span className="leading-relaxed"><b className="text-stone-200">Laptop:</b> Dell Precision Ultra 9. ¡Súper robusta! ($92k).</span></li>
+                            <li className="flex items-start"><span className="text-apple-copper mr-3 mt-0.5">✦</span> <span className="leading-relaxed"><b className="text-stone-200">Mac Mini:</b> Modelo más básico (15C / 24GB).</span></li>
+                            <li className="flex items-start bg-red-950/20 p-2 rounded-lg border border-red-900/30 -mx-2"><span className="text-red-500 font-bold mr-3 mt-0.5">!</span> <span className="text-red-200/80 leading-relaxed font-medium">Omisión Crítica: No cotizó la cámara Osmo Pocket.</span></li>
+                        </ul>
+                    </div>
+
+                    {/* Perfil YOVSOL */}
+                    <div className="group premium-border p-8 flex flex-col relative overflow-hidden animate-fade-in-up tech-pattern" style={{animationDelay: '0.6s'}}>
+                        <div className="glowing-bg" style={{'--glow-color': 'rgba(169, 169, 169, 0.4)'}}></div>
+                        <MicrochipIcon />
+                        
+                        <div className="relative z-10 flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-3xl font-extrabold text-stone-100 tracking-tight mb-2">High-End.</h3>
+                                <div className="inline-flex items-center px-3 py-1 bg-apple-titanium/10 border border-apple-titanium/30 text-apple-titanium text-xs font-bold rounded-full uppercase tracking-wider">
+                                    Yovsol
+                                </div>
+                            </div>
+                            <svg className="w-10 h-10 text-apple-titanium/40 transform group-hover:scale-110 group-hover:text-apple-titanium transition-all duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                        </div>
+                        
+                        <p className="relative z-10 text-stone-300 text-sm mb-8 font-medium leading-relaxed">
+                            La propuesta más cara <span className="text-apple-titanium font-bold">($272k)</span>. Absolutamente todo el equipamiento es el modelo tope de gama disponible.
+                        </p>
+                        
+                        <div className="w-full h-px bg-gradient-to-r from-transparent via-apple-beige/10 to-transparent mb-6"></div>
+                        
+                        <ul className="relative z-10 text-sm text-stone-400 space-y-5 font-light flex-grow">
+                            <li className="flex items-start"><span className="text-apple-titanium mr-3 mt-0.5">✦</span> <span className="leading-relaxed"><b className="text-stone-200">Laptop:</b> Alienware Ultra 9, 32GB RAM, RTX 5070 ($63k).</span></li>
+                            <li className="flex items-start"><span className="text-apple-titanium mr-3 mt-0.5">✦</span> <span className="leading-relaxed"><b className="text-stone-200">Cámara:</b> HP Poly Studio X52 All-in-One ($68k).</span></li>
+                            <li className="flex items-start"><span className="text-stone-500 mr-3 mt-0.5">⌚</span> <span className="leading-relaxed text-stone-400">Mayor tiempo de espera de entrega (25 días).</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Slide5 = () => (
+            <div className="flex flex-col items-center justify-center h-full text-center slide-enter slide-enter-active px-4">
+                <div className="w-full max-w-5xl relative">
+                    
+                    {/* Glowing background behind the whole veredicto */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[120%] bg-apple-gold/10 blur-[120px] rounded-full z-0 pointer-events-none"></div>
+
+                    <div className="relative z-10">
+                        <div className="inline-flex justify-center items-center mb-6 p-4 rounded-3xl bg-apple-beige/5 border border-apple-beige/10 shadow-[0_0_30px_rgba(212,195,179,0.05)] backdrop-blur-xl">
+                            <svg className="w-10 h-10 text-apple-beige" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        
+                        <h2 className="text-6xl md:text-8xl font-extrabold mb-12 tracking-tighter text-white drop-shadow-2xl">
+                            El Veredicto Final.
+                        </h2>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8 text-left items-stretch">
+                            {/* Ganador */}
+                            <div className="md:col-span-3 premium-border p-10 flex flex-col justify-center relative overflow-hidden group tech-pattern">
+                                <div className="absolute inset-0 bg-gradient-to-br from-apple-gold/10 to-transparent opacity-50"></div>
+                                <div className="absolute -top-24 -right-24 w-64 h-64 bg-apple-gold/20 blur-[80px] rounded-full group-hover:bg-apple-gold/30 transition-colors duration-700"></div>
+                                <NetworkIcon />
+                                
+                                <div className="relative z-10">
+                                    <h3 className="text-xl text-apple-gold font-bold uppercase tracking-[0.2em] mb-2">Recomendación #1</h3>
+                                    <div className="text-4xl md:text-5xl font-black text-stone-100 tracking-tight mb-6 flex items-center">
+                                        MG MICROS
+                                        <svg className="w-8 h-8 ml-4 text-apple-gold" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path></svg>
+                                    </div>
+                                    <p className="text-lg text-stone-300 font-light leading-relaxed max-w-lg">
+                                        Si los equipos modelo "base" satisfacen los requerimientos operativos de VAAI, es el claro ganador. 
+                                        <span className="font-semibold text-white"> Ahorras más de $76,000 pesos</span>, cotizaron TODO exactamente como se pidió y tienen entrega inmediata.
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            {/* Advertencias */}
+                            <div className="md:col-span-2 bg-[#141210]/80 backdrop-blur-2xl rounded-3xl p-8 border border-apple-beige/10 flex flex-col justify-center relative overflow-hidden">
+                                <MicrochipIcon />
+                                <div className="relative z-10">
+                                    <h3 className="text-lg font-bold text-stone-200 mb-6 flex items-center tracking-wide">
+                                        <svg className="w-6 h-6 text-apple-copper mr-3 drop-shadow-[0_0_8px_rgba(155,95,58,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        Advertencias Críticas
+                                    </h3>
+                                    <div className="space-y-5">
+                                        <div className="pb-5 border-b border-apple-beige/10">
+                                            <div className="text-sm font-bold text-stone-300 mb-1">Gama Sistemas</div>
+                                            <div className="text-sm text-stone-500 font-light leading-relaxed">Cambió la familia de la Laptop y <span className="text-apple-copper font-medium bg-apple-copper/10 px-1.5 py-0.5 rounded">omitió</span> la cámara Osmo Pocket.</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-bold text-stone-300 mb-1">Yovsol</div>
+                                            <div className="text-sm text-stone-500 font-light leading-relaxed">Hardware tope de gama, pero tiempo de entrega crítico (hasta 25 días).</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Footer Sugerencia */}
+                        <div className="p-6 bg-apple-beige/[0.02] backdrop-blur-md rounded-3xl border border-apple-beige/10 shadow-inner">
+                            <p className="text-sm md:text-[15px] text-stone-400 font-light leading-relaxed">
+                                <strong className="text-stone-200 font-medium">Sugerencia Técnica:</strong> Dado que los 3 cotizaron modelos muy dispares (especialmente en Laptops y Barras de Video), si se requiere un modelo específico, se sugiere definir una ficha técnica estricta y solicitar una re-cotización para competir equitativamente.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const App = () => {
+            const [currentSlide, setCurrentSlide] = useState(0);
+            
+            const slides = [
+                <Slide1 key="s1" />,
+                <Slide2 key="s2" />,
+                <Slide3 key="s3" />,
+                <SlideVideo key="svideo" />,
+                <Slide4 key="s4" />,
+                <Slide5 key="s5" />
+            ];
+
+            const nextSlide = () => setCurrentSlide(prev => (prev < slides.length - 1 ? prev + 1 : prev));
+            const prevSlide = () => setCurrentSlide(prev => (prev > 0 ? prev - 1 : prev));
+
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (e.key === 'ArrowRight' || e.key === 'Space') nextSlide();
+                    if (e.key === 'ArrowLeft') prevSlide();
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, []);
+
+            return (
+                <div className="h-screen w-screen flex flex-col relative overflow-hidden">
+                    
+                    {/* Header sutil */}
+                    <header className="absolute top-0 w-full p-6 flex justify-between items-center z-50 animate-fade-in text-sm font-medium tracking-widest uppercase text-stone-500">
+                        <div className="flex items-center gap-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-apple-gold animate-pulse"></div>
+                            VAAI Comparativa
+                        </div>
+                        <div className="tracking-[0.3em]">
+                            {currentSlide + 1} / {slides.length}
+                        </div>
+                    </header>
+
+                    <main className="flex-grow pt-20 pb-24 relative z-10 w-full max-w-7xl mx-auto">
+                        {slides[currentSlide]}
+                    </main>
+
+                    {/* Controles de navegación Glassmorphism */}
+                    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-4 p-2 glass-panel rounded-full animate-fade-in-up" style={{animationDelay: '1s'}}>
+                        <button 
+                            onClick={prevSlide}
+                            disabled={currentSlide === 0}
+                            className={`p-3 rounded-full transition-all ${currentSlide === 0 ? 'text-stone-700 cursor-not-allowed' : 'text-stone-300 hover:bg-apple-beige/10 hover:scale-105 active:scale-95'}`}
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        
+                        <div className="flex gap-2 px-3">
+                            {slides.map((_, idx) => (
+                                <button 
+                                    key={idx} 
+                                    onClick={() => setCurrentSlide(idx)}
+                                    className={`w-2 h-2 rounded-full transition-all duration-300 ${currentSlide === idx ? 'bg-apple-gold scale-125 w-4' : 'bg-stone-700 hover:bg-stone-500'}`}
+                                />
+                            ))}
+                        </div>
+
+                        <button 
+                            onClick={nextSlide}
+                            disabled={currentSlide === slides.length - 1}
+                            className={`p-3 rounded-full transition-all ${currentSlide === slides.length - 1 ? 'text-stone-700 cursor-not-allowed' : 'text-stone-300 hover:bg-apple-beige/10 hover:scale-105 active:scale-95'}`}
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
